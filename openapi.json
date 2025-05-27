@@ -1,0 +1,142 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Verificador de URLs PK CÍVEL",
+    "version": "1.0.0",
+    "description": "API para verificar URLs no Yahoo ou Bing e gerar evidência em screenshot da busca."
+  },
+  "servers": [
+    {
+      "url": "https://verificador-de-urls-3.onrender.com"
+    }
+  ],
+  "paths": {
+    "/check-url/": {
+      "post": {
+        "summary": "Verificar URL no buscador",
+        "description": "Verifica se uma URL está localizada no Yahoo ou Bing e retorna screenshot e status.",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string" },
+                  "buscador": {
+                    "type": "string",
+                    "enum": ["Yahoo", "Bing"]
+                  }
+                },
+                "required": ["url", "buscador"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado da verificação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "search_status": { "type": "string" },
+                    "screenshot": { "type": "string" },
+                    "buscador": { "type": "string" },
+                    "data_hora": { "type": "string" }
+                  },
+                  "required": [
+                    "url",
+                    "search_status",
+                    "screenshot",
+                    "buscador",
+                    "data_hora"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chave API inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Erro de validação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "loc": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "type": "string" },
+                { "type": "integer" }
+              ]
+            }
+          },
+          "msg": { "type": "string" },
+          "type": { "type": "string" }
+        },
+        "required": ["loc", "msg", "type"]
+      }
+    },
+    "securitySchemes": {
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKeyAuth": []
+    }
+  ]
+}
