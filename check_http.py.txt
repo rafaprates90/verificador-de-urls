@@ -1,0 +1,10 @@
+import httpx
+
+def check_http_status(url):
+    try:
+        r = httpx.get(url, timeout=10)
+        return r.status_code
+    except Exception as e:
+        return f"Erro: {str(e)}"
+
+

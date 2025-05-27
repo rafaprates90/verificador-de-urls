@@ -1,0 +1,79 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+import requests
+import httpx
+from playwright.sync_api import sync_playwright
+from datetime import datetime
+
+app = FastAPI()
+
+class URLRequest(BaseModel):
+    url: str
+    buscador: str  # "Yahoo" ou "Bing"
+
+@app.post("/check-url/")
+def check_url(data: URLRequest):
+    url = data.url
+    buscador = data.buscador.lower()
+
+    # Verificar HTTP Status
+    try:
+        r = httpx.get(url, timeout=10)
+        http_status = r.status_code
+    except Exception:
+        http_status = "Erro"
+
+    # Verificar no IndexNow
+    indexnow_status = "Não verificado"
+    try:
+        indexnow_resp = requests.post(
+            'https://api.indexnow.org/indexnow',
+            json={
+                "host": url.split("/")[2],
+                "key": "SEU_INDEXNOW_KEY",
+                "keyLocation": f"https://{url.split('/')[2]}/key.txt",
+                "urlList": [url]
+            }
+        )
+        indexnow_status = indexnow_resp.status_code
+    except Exception:
+        indexnow_status = "Erro IndexNow"
+
+    # Verificar no buscador
+    search_status = "Não listado no buscador"
+    screenshot_link = "screenshot.png"
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+
+            if buscador == "yahoo":
+                page.goto(f"https://br.search.yahoo.com/search?p=url:{url}")
+            elif buscador == "bing":
+                page.goto(f"https://www.bing.com/search?q=url:{url}")
+            else:
+                return {"erro": "Buscador inválido. Escolha Yahoo ou Bing."}
+
+            page.screenshot(path=screenshot_link)
+            content = page.content()
+
+            if url in content:
+                search_status = "Listado no buscador"
+            else:
+                search_status = "Não listado no buscador"
+
+            browser.close()
+
+    except Exception as e:
+        search_status = f"Erro na busca: {str(e)}"
+
+    resultado = {
+        "url": url,
+        "http_status": http_status,
+        "indexnow_status": indexnow_status,
+        "search_status": search_status,
+        "screenshot": screenshot_link,
+        "data_hora": datetime.now().strftime("%d/%m/%Y %H:%M")
+    }
+
+    return resultado
