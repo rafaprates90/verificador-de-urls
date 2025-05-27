@@ -1,0 +1,76 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Verificador de URLs PK CÍVEL",
+    "version": "1.0.0",
+    "description": "API para verificar URLs no Yahoo ou Bing e gerar screenshot como evidência."
+  },
+  "servers": [
+    {
+      "url": "https://verificador-de-urls-3.onrender.com"
+    }
+  ],
+  "paths": {
+    "/check-url/": {
+      "post": {
+        "summary": "Verificar URL no buscador",
+        "description": "Verifica se a URL está localizada no buscador e retorna screenshot e status.",
+        "operationId": "checkUrl",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "buscador": {
+                    "type": "string",
+                    "enum": ["Yahoo", "Bing"]
+                  }
+                },
+                "required": ["url", "buscador"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado da verificação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "search_status": { "type": "string" },
+                    "screenshot": { "type": "string" },
+                    "buscador": { "type": "string" },
+                    "data_hora": { "type": "string" }
+                  },
+                  "required": ["url", "search_status", "screenshot", "buscador", "data_hora"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKeyAuth": []
+    }
+  ]
+}
